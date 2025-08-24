@@ -7,8 +7,16 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    unoptimized: false,
+    domains: [],
+    formats: ['image/webp', 'image/avif'],
   },
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  // Optimize for Vercel deployment
+  output: 'standalone',
+  poweredByHeader: false,
 }
 
 export default nextConfig
