@@ -1,16 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Upload } from "lucide-react"
+import { Upload, User, LogOut } from "lucide-react"
 import { ImageUploader } from "@/components/image-uploader"
 import { StyleSelector } from "@/components/style-selector"
 import { GenerationControls, type GenerationOptions } from "@/components/generation-controls"
 import { ResultDisplay } from "@/components/result-display"
 import { ModelSelector, type ModelConfig } from "@/components/model-selector"
+import { GoogleLogin } from "@/components/google-login"
+import { Button } from "@/components/ui/button"
 import { generateKolorsImage, PRESET_STYLES } from "@/lib/kolors"
 import { generateOpenAIImage } from "@/lib/openai"
+import { signOut } from "@/lib/supabase"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function PhotoStylerPage() {
+  const { user, loading, isAuthenticated } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedImageBase64, setSelectedImageBase64] = useState<string>("")
   const [selectedStyle, setSelectedStyle] = useState<string>("cinematic")
@@ -47,6 +52,12 @@ export default function PhotoStylerPage() {
   }
 
   const handleGenerate = async (options: GenerationOptions) => {
+    // 检查用户是否已登录
+    if (!isAuthenticated) {
+      setError("请先登录后再使用图片生成功能")
+      return
+    }
+
     let prompt = ""
     if (selectedStyle === "custom") {
       if (!customPrompt.trim()) {
@@ -129,10 +140,66 @@ export default function PhotoStylerPage() {
     })
   }
 
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('登出失败:', error)
+    }
+  }
+
+  const handleLoginPrompt = () => {
+    setError("")
+    // 滚动到页面顶部的登录区域
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // 可以添加一些视觉提示，比如高亮登录按钮
+    const loginArea = document.querySelector('[data-login-area]')
+    if (loginArea) {
+      loginArea.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+      setTimeout(() => {
+        loginArea.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50')
+      }, 3000)
+    }
+  }
+
   const canGenerate = !isGenerating && (selectedStyle !== "custom" || customPrompt.trim())
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* 顶部用户认证区域 */}
+      <div className="bg-gray-800/50 border-b border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-white">Photo Stylizer</h1>
+            <div className="flex items-center space-x-4" data-login-area>
+              {loading ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isAuthenticated && user ? (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-gray-300">
+                      {user.user_metadata?.full_name || user.email}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1 text-gray-300 border-gray-600 hover:bg-gray-700"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>登出</span>
+                  </Button>
+                </div>
+              ) : (
+                <GoogleLogin />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Left Panel - Upload and Controls */}
@@ -162,7 +229,12 @@ export default function PhotoStylerPage() {
                 />
 
                 {modelConfig.model === 'kolors' ? (
-                  <GenerationControls onGenerate={handleGenerate} isGenerating={isGenerating} disabled={!canGenerate} />
+                  <GenerationControls 
+                    onGenerate={handleGenerate} 
+                    isGenerating={isGenerating} 
+                    disabled={!canGenerate} 
+                    isAuthenticated={isAuthenticated}
+                  />
                 ) : (
                   <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4">
                     <button
@@ -176,7 +248,7 @@ export default function PhotoStylerPage() {
                           <span>生成中...</span>
                         </>
                       ) : (
-                        <span>生成图片</span>
+                        <span>{isAuthenticated ? "生成图片" : "登录后生成"}</span>
                       )}
                     </button>
                   </div>
@@ -192,6 +264,7 @@ export default function PhotoStylerPage() {
               isGenerating={isGenerating}
               error={error}
               onRetry={handleRetry}
+              onLogin={handleLoginPrompt}
               className="h-full min-h-[600px]"
             />
           </div>

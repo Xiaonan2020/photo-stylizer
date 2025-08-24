@@ -9,6 +9,7 @@ interface GenerationControlsProps {
   onGenerate: (options: GenerationOptions) => void
   isGenerating: boolean
   disabled: boolean
+  isAuthenticated?: boolean
   className?: string
 }
 
@@ -19,7 +20,7 @@ export interface GenerationOptions {
   negativePrompt?: string
 }
 
-export function GenerationControls({ onGenerate, isGenerating, disabled, className }: GenerationControlsProps) {
+export function GenerationControls({ onGenerate, isGenerating, disabled, isAuthenticated = true, className }: GenerationControlsProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [guidanceScale, setGuidanceScale] = useState(7.5)
   const [numInferenceSteps, setNumInferenceSteps] = useState(20)
@@ -117,7 +118,7 @@ export function GenerationControls({ onGenerate, isGenerating, disabled, classNa
         disabled={disabled || isGenerating}
         className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isGenerating ? "生成中..." : "生成"}
+        {isGenerating ? "生成中..." : isAuthenticated ? "生成" : "登录后生成"}
       </Button>
 
       <p className="text-xs text-gray-500 text-center">每次生成耗时约 10-30 秒</p>

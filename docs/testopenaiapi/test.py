@@ -3,13 +3,13 @@ import requests
 import base64
 import json
 
-url = "https://api.v3.cm/v1/images/edits"
+url = "https://api.vveai.com/v1/images/edits"
 
 # 替换为你的API密钥
 api_key = "sk-XEaPcwV0Q1krnR6ABd18Fc27Dd0c41Bb86607641D1271f08"
 
 # 图像路径
-image_path = "/home/nans/codes/changeimagestyle/1693824952656546.png"
+image_path = "./docs/testopenaiapi/1661926227043328.jpg"
 
 # 设置请求头
 headers = {
@@ -23,6 +23,7 @@ with open(image_path, 'rb') as image_file:
     }
     data = {
         'model': 'gpt-image-1',
+        # 'model': 'gpt-4o',
         'prompt': '改变图片风格为黏土风格'
     }
     

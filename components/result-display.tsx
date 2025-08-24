@@ -11,10 +11,11 @@ interface ResultDisplayProps {
   error?: string
   onDownload?: () => void
   onRetry?: () => void
+  onLogin?: () => void
   className?: string
 }
 
-export function ResultDisplay({ resultUrl, isGenerating, error, onDownload, onRetry, className }: ResultDisplayProps) {
+export function ResultDisplay({ resultUrl, isGenerating, error, onDownload, onRetry, onLogin, className }: ResultDisplayProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const handleDownload = async () => {
@@ -62,17 +63,29 @@ export function ResultDisplay({ resultUrl, isGenerating, error, onDownload, onRe
               <RefreshCw className="w-8 h-8 text-red-400" />
             </div>
             <div>
-              <p className="text-lg font-medium text-red-400 mb-2">生成失败</p>
+              <p className="text-lg font-medium text-red-400 mb-2">
+                {error.includes('登录') ? '需要登录' : '生成失败'}
+              </p>
               <p className="text-sm text-gray-400 mb-4">{error}</p>
-              {onRetry && (
-                <Button
-                  onClick={onRetry}
-                  variant="outline"
-                  className="border-red-500 text-red-400 hover:bg-red-500/10 bg-transparent"
-                >
-                  重试
-                </Button>
-              )}
+              <div className="flex gap-2 justify-center">
+                {error.includes('登录') && onLogin && (
+                  <Button
+                    onClick={onLogin}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    立即登录
+                  </Button>
+                )}
+                {onRetry && !error.includes('登录') && (
+                  <Button
+                    onClick={onRetry}
+                    variant="outline"
+                    className="border-red-500 text-red-400 hover:bg-red-500/10 bg-transparent"
+                  >
+                    重试
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ) : resultUrl ? (
